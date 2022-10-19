@@ -8,11 +8,13 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,7 +22,7 @@ import java.time.LocalDateTime;
 
 
 @Route("t/:name")
-public class TodoUI extends VerticalLayout implements BeforeEnterObserver {
+public class TodoUI extends VerticalLayout implements BeforeEnterObserver, HasDynamicTitle {
 
     @Autowired
     InMemoryRepository inMemoryRepository;
@@ -62,6 +64,20 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver {
         view.addColumn(Todo::getCreatedAt);
         refreshItems();
         add(view);
+
+
+        var btnSelectAll = new Button("select all");
+        btnSelectAll.setIcon(VaadinIcon.PLUS_CIRCLE.create());
+        btnSelectAll.addClickListener(buttonClickEvent -> {
+            view.asMultiSelect().select(inMemoryRepository.getAllItems());
+        });
+        var btnDeselectAll = new Button("deselect all");
+        btnDeselectAll.setIcon(VaadinIcon.MINUS_CIRCLE.create());
+        btnDeselectAll.addClickListener(buttonClickEvent -> {
+            view.asMultiSelect().deselectAll();
+        });
+
+        add(new HorizontalLayout(btnSelectAll, btnDeselectAll));
     }
 
     private Dialog createAddDialogue() {
@@ -108,5 +124,10 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver {
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
         author = beforeEnterEvent.getRouteParameters().get("name").get();
+    }
+
+    @Override
+    public String getPageTitle() {
+        return "Todo "+author.toUpperCase();
     }
 }
