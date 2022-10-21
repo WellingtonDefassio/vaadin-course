@@ -3,6 +3,7 @@ package com.example.vaadincourse1.todo.view;
 import com.example.vaadincourse1.todo.model.Todo;
 import com.example.vaadincourse1.todo.repo.InMemoryRepository;
 import com.example.vaadincourse1.todo.service.Broadcaster;
+import com.example.vaadincourse1.todo.service.ExcelGeneratorService;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -10,6 +11,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -20,9 +22,13 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.shared.Registration;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 
@@ -35,6 +41,9 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver, HasDy
     String author;
 
     Grid<Todo> view;
+
+    @Autowired
+    ExcelGeneratorService excelGeneratorService;
 
     Registration broadcasterRegistration;
 
@@ -61,10 +70,26 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver, HasDy
         });
 
 
+        Anchor downloadExcel = new Anchor(new StreamResource("excel.xlsx",() -> {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            try {
+                excelGeneratorService.createExcelFile(view.getSelectedItems()).write(os);
 
-        add(new HorizontalLayout(btnAdd, btnRemove));
+                return new ByteArrayInputStream(os.toByteArray());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }), null);
+        var btnExport = new Button("Export selected to Excel");
+        btnExport.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+        downloadExcel.add(btnExport);
+
+
+
+        add(new HorizontalLayout(btnAdd, btnRemove, downloadExcel));
 
         view = new Grid();
+        view.setAllRowsVisible(true);
         view.setSelectionMode(Grid.SelectionMode.MULTI);
         view.addColumn(Todo::getTitle);
         view.addColumn(Todo::getBody);
