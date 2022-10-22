@@ -4,6 +4,7 @@ import com.example.vaadincourse1.todo.model.Todo;
 import com.example.vaadincourse1.todo.repo.InMemoryRepository;
 import com.example.vaadincourse1.todo.service.Broadcaster;
 import com.example.vaadincourse1.todo.service.ExcelGeneratorService;
+import com.example.vaadincourse1.todo.service.PdfGeneratorService;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -45,6 +46,9 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver, HasDy
     @Autowired
     ExcelGeneratorService excelGeneratorService;
 
+    @Autowired
+    PdfGeneratorService pdfGeneratorService;
+
     Registration broadcasterRegistration;
 
     @Override
@@ -70,7 +74,7 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver, HasDy
         });
 
 
-        Anchor downloadExcel = new Anchor(new StreamResource("excel.xlsx",() -> {
+        Anchor downloadExcel = new Anchor(new StreamResource("excel.xlsx", () -> {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             try {
                 excelGeneratorService.createExcelFile(view.getSelectedItems()).write(os);
@@ -84,9 +88,16 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver, HasDy
         btnExport.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
         downloadExcel.add(btnExport);
 
+        var downloadPDF = new Anchor(new StreamResource("todo-list.pdf", () ->
+                new ByteArrayInputStream(
+                        pdfGeneratorService.createPdf(view.getSelectedItems()).toByteArray())), null);
+
+        var btnPDF = new Button("Export selected to PDF");
+        btnPDF.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+        downloadPDF.add(btnPDF);
 
 
-        add(new HorizontalLayout(btnAdd, btnRemove, downloadExcel));
+        add(new HorizontalLayout(btnAdd, btnRemove, downloadExcel, btnPDF));
 
         view = new Grid();
         view.setAllRowsVisible(true);
@@ -153,7 +164,6 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver, HasDy
         });
 
 
-
         dialog.getFooter().add(btnCancel, btnSave);
 
         return dialog;
@@ -170,7 +180,7 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver, HasDy
 
     @Override
     public String getPageTitle() {
-        return "Todo "+author.toUpperCase();
+        return "Todo " + author.toUpperCase();
     }
 
 
