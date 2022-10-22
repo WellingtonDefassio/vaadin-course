@@ -11,6 +11,7 @@ public class HTMLToPDFService {
 
     public static ByteArrayOutputStream createPDF(String html) {
         var render = new ITextRenderer();
+
         render.setDocumentFromString(html);
         render.layout();
 

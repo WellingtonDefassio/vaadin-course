@@ -4,7 +4,7 @@ import com.example.vaadincourse1.todo.model.Todo;
 import com.example.vaadincourse1.todo.repo.InMemoryRepository;
 import com.example.vaadincourse1.todo.service.Broadcaster;
 import com.example.vaadincourse1.todo.service.ExcelGeneratorService;
-import com.example.vaadincourse1.todo.service.PdfGeneratorService;
+import com.example.vaadincourse1.todo.service.PDFGeneratorService;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -47,7 +47,7 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver, HasDy
     ExcelGeneratorService excelGeneratorService;
 
     @Autowired
-    PdfGeneratorService pdfGeneratorService;
+    PDFGeneratorService pdfGeneratorService;
 
     Registration broadcasterRegistration;
 
@@ -88,16 +88,17 @@ public class TodoUI extends VerticalLayout implements BeforeEnterObserver, HasDy
         btnExport.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
         downloadExcel.add(btnExport);
 
+
         var downloadPDF = new Anchor(new StreamResource("todo-list.pdf", () ->
                 new ByteArrayInputStream(
                         pdfGeneratorService.createPdf(view.getSelectedItems()).toByteArray())), null);
-
+        downloadPDF.setTarget("_blank");
         var btnPDF = new Button("Export selected to PDF");
         btnPDF.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
         downloadPDF.add(btnPDF);
 
 
-        add(new HorizontalLayout(btnAdd, btnRemove, downloadExcel, btnPDF));
+        add(new HorizontalLayout(btnAdd, btnRemove, downloadExcel, downloadPDF));
 
         view = new Grid();
         view.setAllRowsVisible(true);
